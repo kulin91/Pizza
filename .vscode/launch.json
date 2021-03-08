@@ -8,7 +8,7 @@
       "type": "pwa-chrome",
       "request": "launch",
       "name": "Open index.html",
-      "file": "c:\\Users\\alexa\\OneDrive\\Рабочий стол\\Pizza\\index.html"
+      "file": "c:\\Users\\alexa\\OneDrive\\Рабочий стол\\Pizza\\client\\index.html"
     }
   ]
 }
