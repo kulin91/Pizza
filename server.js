@@ -1,10 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://admin:<admin>@cluster0.ellqg.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const mongoose = require('mongoose');
+const Pizzas = require('./db');
 
 const app = express();
+const uri = "mongodb+srv://admin:admin@pizzacluster.qkfyq.mongodb.net/pizzaCluster?retryWrites=true&w=majority";
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -92,65 +92,115 @@ let pizzas = [
   }
 ]
 
-
 app.get('/', function (req, res) {
   res.send('Hello API');
 })
 
-app.get('/pizzas', function (req, res) {
-  let page = +req.query.page || 1;
-  let pageSize = +req.query.pageSize || 5;
-  res.send(pizzas.slice(((page - 1) * pageSize), ((page - 1) * pageSize) + pageSize));
+app.get('/pizzas', async function (req, res) {
+  // let page = +req.query.page || 1;
+  // let pageSize = +req.query.pageSize || 5;
+  // res.send(pizzas.slice(((page - 1) * pageSize), ((page - 1) * pageSize) + pageSize));
+  const pizzas = await Pizzas.find({});
+  console.log(pizzas);
 })
 
-app.get('/pizzas/:id', function (req, res) {
+app.get('/pizzas/:id', async function (req, res) {
   console.log(req.params);
-  const pizza = pizzas.find(function (pizza) {
-    return pizza.id === +req.params.id;
-  });
-  if (!pizza) { res.status(404) };
-  res.send(pizza);
-})
-
-app.post('/pizzas', function (req, res) {
-  const pizza = {
-    id: pizzas.length + 1,
-    name: req.body.name
-  };
-  pizzas.push(pizza);
-  res.send(pizza);
-})
-
-app.put('/pizzas/:id', function (req, res) {
-  const pizza = pizzas.find(function (pizza) {
-    return pizza.id === +req.params.id;
-  });
-  if (!pizza) { return res.sendStatus(404); };
-  pizza.name = req.body.name;
-  res.send(pizza);
-})
-
-app.get('/pizzas', function (req, res) {
-  const pizza = pizzas.find(function (pizza) {
-    return pizza.id === +req.params.id;
-  })
-});
-
-app.delete('/pizzas/:id', function (req, res) {
-  const doFilter = pizzas.length
-  pizzas = pizzas.filter((pizza) => {
-    return pizza.id !== +req.params.id;
-  })
-  if (pizzas.length == doFilter) {
-    return res.sendStatus(404);
+  try {
+    const pizza = await Pizzas.findById(req.params.id);
+    if (!pizza) { res.status(404) };
+    res.send(pizza);
   }
-  res.send(pizzas);
+  catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 })
 
-client.connect(err => {
-  app.listen(3012, function () {
-  console.log('API app started');
-  })
-});
+// app.post('/pizzas', function (req, res) {
+//   const pizza = new Pizzas({ name: req.body.name, date: new Date() });
+//   console.log(1);
+//   pizza.save(function (err) {
+//     console.log(2);
+//     if (err) console.log(err);
+//     console.log(4);
+//     res.send(pizza);
+//   });
+//   console.log(3);
+// })
 
+app.post('/pizzas', async function (req, res) {
+  const pizza = new Pizzas({ name: req.body.name, date: new Date() });
+  try {
+    await pizza.save();
+    res.send(pizza);
+  }
+  catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+})
 
+app.put('/pizzas/:id', async function (req, res) {
+  // const pizza = pizzas.find(function (pizza) {
+  //   return pizza.id === +req.params.id;
+  // });
+  // if (!pizza) { return res.sendStatus(404); };
+  // pizza.name = req.body.name;
+  // res.send(pizza);
+  try {
+    const pizza = await Pizzas.findById(req.params.id);
+    if (!pizza) { res.status(404) };
+    pizza.name = req.body.name;
+    await pizza.save();
+    res.send(pizza);
+  }
+  catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+})
+
+app.delete('/pizzas/:id',async function (req, res) {
+  // const doFilter = pizzas.length
+  // pizzas = pizzas.filter((pizza) => {
+  //   return pizza.id !== +req.params.id;
+  // })
+  // if (pizzas.length == doFilter) {
+  //   return res.sendStatus(404);
+  // }
+  // res.send(pizzas);
+  // try {
+  //   const pizza = await Pizzas.findById(req.params.id);
+  //   if (!pizza) { res.status(404) };
+  //   Pizzas.dropIndex()
+  //   pizza.name = req.body.name;
+  //   await pizza.save();
+  //   res.send(pizza);
+  // }
+try {
+    Pizzas.deleteOne({ "_id": ObjectId(pizza) });
+  }
+  catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+})
+
+const startApp = async () => {
+  try {
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connected!');
+    app.listen(3012, function () {
+      console.log('API app started');
+    });
+  } catch (e) {
+    console.log('Unable to connect to DB', e);
+    startApp();
+  }
+}
+
+startApp();
