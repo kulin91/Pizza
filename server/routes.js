@@ -1,15 +1,44 @@
 const router = require("express").Router();
-const Pizzas = require('./db');
+const Pizzas = require("./db");
+
+/**
+ * @typedef Pizza
+ * @property {string} _id
+ * @property {string} name - Pizza name
+ * @property {string} date - Date in ISO 8601 format
+ * @property {number} __v
+ */
+
+/**
+ * @typedef CreateOrUpdatePizzaContract
+ * @property {string} name.required - Pizza name
+ */
 
 router.get("/", function (req, res) {
   res.send("Hello API");
 });
 
+/**
+ * Gel all pizzas
+ * @group Pizzas - API Interface for pizzas
+ * @route GET /pizzas
+ * @returns {Array<Pizza>} 200
+ * @returns {Error}  default - Unexpected error
+ */
 router.get("/pizzas", async function (req, res) {
   const pizzas = await Pizzas.find({});
   res.send(pizzas);
 });
 
+/**
+ * Get pizza by id
+ * @group Pizzas - API Interface for pizzas
+ * @route GET /pizzas/{id}
+ * @param {string} id.path.required
+ * @property {string} id
+ * @returns {Pizza} 200
+ * @returns {Error}  default - Unexpected error
+ */
 router.get("/pizzas/:id", async function (req, res) {
   console.log(req.params);
   try {
@@ -36,6 +65,14 @@ router.get("/pizzas/:id", async function (req, res) {
 //   console.log(3);
 // })
 
+/**
+ * Create pizza
+ * @group Pizzas - API Interface for pizzas
+ * @route POST /pizzas
+ * @param {CreateOrUpdatePizzaContract.model} pizza.body.required - The new pizza
+ * @returns {Pizza} 200 - Pizza
+ * @returns {Error}  default - Unexpected error
+ */
 router.post("/pizzas", async function (req, res) {
   const pizza = new Pizzas({ name: req.body.name, date: new Date() });
   try {
@@ -47,6 +84,16 @@ router.post("/pizzas", async function (req, res) {
   }
 });
 
+/**
+ * Update pizza by id
+ * @group Pizzas - API Interface for pizzas
+ * @route PUT /pizzas/{id}
+ * @param {string} id.path.required
+ * @param {CreateOrUpdatePizzaContract.model} pizza.body.required - The new pizza
+ * @property {string} id
+ * @returns {Pizza} 200 - Pizza
+ * @returns {Error}  default - Unexpected error
+ */
 router.put("/pizzas/:id", async function (req, res) {
   // const pizza = pizzas.find(function (pizza) {
   //   return pizza.id === +req.params.id;
@@ -68,6 +115,15 @@ router.put("/pizzas/:id", async function (req, res) {
   }
 });
 
+/**
+ * Delete pizza by id
+ * @group Pizzas - API Interface for pizzas
+ * @route DELETE /pizzas/{id}
+ * @param {string} id.path.required
+ * @property {string} id
+ * @returns {void} 200
+ * @returns {Error}  default - Unexpected error
+ */
 router.delete("/pizzas/:id", async function (req, res) {
   // const doFilter = pizzas.length
   // pizzas = pizzas.filter((pizza) => {
