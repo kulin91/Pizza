@@ -14,19 +14,35 @@ const Pizzas = require("./db");
  * @property {string} name.required - Pizza name
  */
 
-router.get("/", function (req, res) {
-  res.send("Hello API");
-});
+// router.get("/", function (req, res) {
+//   res.send("Hello API");
+// });
 
 /**
  * Gel all pizzas
  * @group Pizzas - API Interface for pizzas
  * @route GET /pizzas
+ * @param {string} limit.query - limit
+ * @param {string} page.query- page number.
  * @returns {Array<Pizza>} 200
  * @returns {Error}  default - Unexpected error
  */
 router.get("/pizzas", async function (req, res) {
-  const pizzas = await Pizzas.find({});
+  // let page = +req.query.page || 1;
+  // let pageSize = +req.query.pageSize || 5;
+  // res.send(Pizzas.slice(((page - 1) * pageSize), ((page - 1) * pageSize) + pageSize));
+  
+  // const pageOptions = {
+  //   page: parseInt(req.query.page, 10) || 0,
+  //   limit: parseInt(req.query.limit, 10) || 10
+  // }
+
+  const page =  +req.query.page || 1;
+  const limit = +req.query.limit || 10;
+
+  const pizzas = await Pizzas.find()
+    .skip(page * limit)
+    .limit(limit);
   res.send(pizzas);
 });
 
@@ -53,18 +69,6 @@ router.get("/pizzas/:id", async function (req, res) {
   }
 });
 
-// app.post('/pizzas', function (req, res) {
-//   const pizza = new Pizzas({ name: req.body.name, date: new Date() });
-//   console.log(1);
-//   pizza.save(function (err) {
-//     console.log(2);
-//     if (err) console.log(err);
-//     console.log(4);
-//     res.send(pizza);
-//   });
-//   console.log(3);
-// })
-
 /**
  * Create pizza
  * @group Pizzas - API Interface for pizzas
@@ -73,6 +77,7 @@ router.get("/pizzas/:id", async function (req, res) {
  * @returns {Pizza} 200 - Pizza
  * @returns {Error}  default - Unexpected error
  */
+
 router.post("/pizzas", async function (req, res) {
   const pizza = new Pizzas({ name: req.body.name, date: new Date() });
   try {
@@ -95,12 +100,6 @@ router.post("/pizzas", async function (req, res) {
  * @returns {Error}  default - Unexpected error
  */
 router.put("/pizzas/:id", async function (req, res) {
-  // const pizza = pizzas.find(function (pizza) {
-  //   return pizza.id === +req.params.id;
-  // });
-  // if (!pizza) { return res.sendStatus(404); };
-  // pizza.name = req.body.name;
-  // res.send(pizza);
   try {
     const pizza = await Pizzas.findById(req.params.id);
     if (!pizza) {
@@ -109,7 +108,8 @@ router.put("/pizzas/:id", async function (req, res) {
     pizza.name = req.body.name;
     await pizza.save();
     res.send(pizza);
-  } catch (error) {
+  }
+  catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
@@ -125,25 +125,14 @@ router.put("/pizzas/:id", async function (req, res) {
  * @returns {Error}  default - Unexpected error
  */
 router.delete("/pizzas/:id", async function (req, res) {
-  // const doFilter = pizzas.length
-  // pizzas = pizzas.filter((pizza) => {
-  //   return pizza.id !== +req.params.id;
-  // })
-  // if (pizzas.length == doFilter) {
-  //   return res.sendStatus(404);
-  // }
-  // res.send(pizzas);
-  // try {
-  //   const pizza = await Pizzas.findById(req.params.id);
-  //   if (!pizza) { res.status(404) };
-  //   Pizzas.dropIndex()
-  //   pizza.name = req.body.name;
-  //   await pizza.save();
-  //   res.send(pizza);
-  // }
   try {
-    Pizzas.deleteOne({ _id: ObjectId(pizza) });
-  } catch (error) {
+    const pizza = await Pizzas.findByIdAndDelete(req.params.id);
+    if (!pizza) {
+      return res.sendStatus(404);
+    }
+    res.send(pizza);
+  }
+  catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
